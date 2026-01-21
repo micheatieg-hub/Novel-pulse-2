@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — NovelPulse</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f4f7;
+  margin:0;
+  padding:16px;
+}
+.card {
+  background:white;
+  border-radius:16px;
+  padding:20px;
+  max-width:500px;
+  margin:auto;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+h2 {
+  text-align:center;
+  margin-bottom:16px;
+}
+input, textarea, button {
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:1rem;
+}
+button {
+  background:#6200EE;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+button:hover {
+  background:#4b1fa5;
+}
+.status {
+  margin-top:12px;
+  font-size:0.95rem;
+  color:green;
+}
+a {
+  display:block;
+  text-align:center;
+  margin-top:14px;
+  text-decoration:none;
+  color:#6200EE;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Send a Message</h2>
+
+  <input id="subject" placeholder="Subject (optional)">
+  <textarea id="message" rows="5" placeholder="Write your message here..." required></textarea>
+
+  <button onclick="sendMessage()">Send Message</button>
+
+  <div class="status" id="status"></div>
+
+  <a href="index.html">← Back to Home</a>
+</div>
+
+<!-- Appwrite SDK -->
+<script src="https://cdn.jsdelivr.net/npm/appwrite@9.0.1"></script>
+<script>
+const client = new Appwrite.Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1') // your endpoint
+  .setProject('69702007003c1eaed6f4'); // your project ID
+
+const databases = new Appwrite.Databases(client);
+
+// Replace collection ID with your messages collection
+const COLLECTION_ID = '6970258d0018b14990e2';
+
+function sendMessage() {
+  const subject = document.getElementById('subject').value;
+  const message = document.getElementById('message').value;
+
+  if (!message) {
+    document.getElementById('status').innerText = '⚠️ Message cannot be empty';
+    return;
+  }
+
+  databases.createDocument(
+    'default',        // default database ID
+    COLLECTION_ID,    // messages collection
+    'unique()',       // unique document ID
+    {
+      subject: subject,
+      message: message,
+      createdAt: new Date().toISOString()
+    }
+  ).then(() => {
+    document.getElementById('status').innerText =
+      '✅ Message sent successfully. The author will reply soon.';
+    document.getElementById('subject').value = '';
+    document.getElementById('message').value = '';
+  }).catch(err => {
+    document.getElementById('status').innerText = '❌ Error sending message. Try again.';
+    console.error(err);
+  });
+}
+</script>
+
+</body>
+</html>
