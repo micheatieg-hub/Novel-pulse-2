@@ -3,60 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Messages — NovelPulse</title>
-
+<title>Send a Message — Novel App</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f4f4f7;
-  margin:0;
-  padding:16px;
-}
-.card {
-  background:white;
-  border-radius:16px;
-  padding:20px;
-  max-width:500px;
-  margin:auto;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-h2 {
-  text-align:center;
-  margin-bottom:16px;
-}
-input, textarea, button {
-  width:100%;
-  margin-top:12px;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  font-size:1rem;
-}
-button {
-  background:#6200EE;
-  color:white;
-  border:none;
-  cursor:pointer;
-  font-weight:bold;
-}
-button:hover {
-  background:#4b1fa5;
-}
-.status {
-  margin-top:12px;
-  font-size:0.95rem;
-  color:green;
-}
-a {
-  display:block;
-  text-align:center;
-  margin-top:14px;
-  text-decoration:none;
-  color:#6200EE;
-}
+body { font-family: Arial, sans-serif; background: #f4f4f7; margin:0; padding:20px; }
+.card { background: #fff; max-width:500px; margin:auto; padding:20px; border-radius:16px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+h2 { text-align:center; margin-bottom:16px; }
+input, textarea, button { width:100%; padding:12px; margin-top:12px; border-radius:12px; border:1px solid #ccc; font-size:1rem; }
+button { background:#6200EE; color:#fff; border:none; font-weight:bold; cursor:pointer; }
+button:hover { background:#4b1fa5; }
+.status { margin-top:12px; font-size:0.95rem; color:green; }
+.message-reply { margin-top:12px; font-size:0.95rem; color:#333; padding:10px; background:#eef; border-radius:10px; }
+a { display:block; text-align:center; margin-top:14px; text-decoration:none; color:#6200EE; }
 </style>
 </head>
-
 <body>
 
 <div class="card">
@@ -68,48 +27,57 @@ a {
   <button onclick="sendMessage()">Send Message</button>
 
   <div class="status" id="status"></div>
+  <div class="message-reply" id="replyDisplay"></div>
 
   <a href="index.html">← Back to Home</a>
 </div>
 
-<!-- Appwrite SDK -->
 <script src="https://cdn.jsdelivr.net/npm/appwrite@9.0.1"></script>
 <script>
 const client = new Appwrite.Client()
-  .setEndpoint('https://fra.cloud.appwrite.io/v1') // your endpoint
-  .setProject('69702007003c1eaed6f4'); // your project ID
+  .setEndpoint('https://fra.cloud.appwrite.io/v1') // Appwrite endpoint
+  .setProject('69702007003c1eaed6f4'); // Project ID
 
 const databases = new Appwrite.Databases(client);
-
-// Replace collection ID with your messages collection
-const COLLECTION_ID = '6970258d0018b14990e2';
+const DATABASE_ID = 'novelpulse_';
+const COLLECTION_ID = '6970c672001f68ea0230'; // messages collection
 
 function sendMessage() {
   const subject = document.getElementById('subject').value;
   const message = document.getElementById('message').value;
+  const status = document.getElementById('status');
+  const replyDisplay = document.getElementById('replyDisplay');
 
   if (!message) {
-    document.getElementById('status').innerText = '⚠️ Message cannot be empty';
+    status.innerText = '⚠️ Message cannot be empty';
     return;
   }
 
+  const senderId = 'guest_' + Date.now();
+  const recoverId = Appwrite.ID.unique();
+  const replyId = '';
+
   databases.createDocument(
-    'default',        // default database ID
-    COLLECTION_ID,    // messages collection
-    'unique()',       // unique document ID
+    DATABASE_ID,
+    COLLECTION_ID,
+    Appwrite.ID.unique(),
     {
       subject: subject,
       message: message,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      senderId: senderId,
+      replyId: replyId,
+      recoverId: recoverId,
+      reply: ''
     }
-  ).then(() => {
-    document.getElementById('status').innerText =
-      '✅ Message sent successfully. The author will reply soon.';
+  ).then(doc => {
+    status.innerText = '✅ Message sent successfully — the author will reply soon.';
     document.getElementById('subject').value = '';
     document.getElementById('message').value = '';
+    replyDisplay.innerText = '⏳ Reply pending';
   }).catch(err => {
-    document.getElementById('status').innerText = '❌ Error sending message. Try again.';
-    console.error(err);
+    console.error('Appwrite error:', err);
+    status.innerText = '❌ Error sending message. Check console.';
   });
 }
 </script>
